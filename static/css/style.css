@@ -1,0 +1,161 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    
+    
+}
+
+
+body{
+    font-family:Arial, sans-serif;
+     background: #f1f5f9;
+    min-height:100vh;
+    padding:10px;
+}
+
+.container{
+    width:100%;
+    max-width:800px;
+    margin:20px auto;
+    background:#fff;
+    border-radius:12px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    padding:20px;
+}
+
+h2{
+    text-align:center;
+    margin-bottom:20px;
+    color:#333;
+   
+}
+
+#chat-box{
+    height:500px;
+    border:1px solid #ddd;
+    border-radius:10px;
+    padding:15px;
+    overflow-y:auto;
+    margin-bottom:15px;
+    background:#fafafa;
+}
+#chat-box{
+    display:flex;
+    flex-direction:column;
+}
+.user{
+    background:#007bff;
+    color:white;
+    padding:10px 15px;
+    border-radius:15px;
+    max-width:70%;
+    align-self: flex-end;
+    margin-top:10px;
+    word-wrap:break-word;
+}
+
+.bot{
+    background:#e9ecef;
+    color:#333;
+    padding:10px 15px;
+    border-radius:15px;
+    max-width:70%;
+   align-self: flex-start; 
+    margin-top:10px;
+    word-wrap:break-word;
+}
+
+#imageInput{
+    width:100%;
+    margin-bottom:15px;
+}
+#message{
+    width:80%;
+    padding:12px;
+    border-radius:25px;
+}
+
+button{
+    width:50px;
+    height:50px;
+    border:none;
+    border-radius:50%;
+    margin-left:5px;
+    background-color:black;
+     
+}
+
+img{
+    max-width:100%;
+    height:auto;
+    border-radius:10px;
+    margin-top:10px;
+}
+
+/* Tablet */
+@media screen and (max-width:768px){
+
+    .container{
+        padding:15px;
+    }
+
+    #chat-box{
+        height:60vh;
+    }
+
+    h2{
+        font-size:22px;
+    }
+
+    #message{
+        width:calc(100% - 60px);
+        font-size:15px;
+    }
+
+    button{
+        width:45px;
+        height:45px;
+    }
+}
+
+/* Mobile */
+@media screen and (max-width:480px){
+
+    body{
+        padding:0;
+    }
+
+    .container{
+        margin:0;
+        min-height:100vh;
+        border-radius:0;
+        padding:10px;
+    }
+
+    h2{
+        font-size:20px;
+    }
+
+    #chat-box{
+        height:65vh;
+        padding:10px;
+    }
+
+    #message{
+        width:calc(100% - 55px);
+        padding:10px;
+        font-size:14px;
+    }
+
+    button{
+        width:40px;
+        height:40px;
+        margin-left:5px;
+    }
+
+    .user,
+    .bot{
+        font-size:14px;
+    }
+}
