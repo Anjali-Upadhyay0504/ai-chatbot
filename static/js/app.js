@@ -1,12 +1,27 @@
 console.log("app.js loaded");
+
 const SpeechRecognition =
     window.SpeechRecognition ||
     window.webkitSpeechRecognition;
 
-const recognition =
-    new SpeechRecognition();
+const recognition = new SpeechRecognition();
 
 recognition.lang = "en-US";
+
+// ==========================
+// 📜 SCROLL TO BOTTOM
+// ==========================
+function scrollToBottom() {
+    const chatBox = document.getElementById("chat-box");
+
+    if (!chatBox) return;
+
+    chatBox.scrollTo({
+        top: chatBox.scrollHeight,
+        behavior: "smooth"
+    });
+}
+
 // ==========================
 // 📜 LOAD CHAT HISTORY
 // ==========================
@@ -24,24 +39,27 @@ async function loadHistory() {
 
         console.log("History Data:", data);
 
-        let chatBox = document.getElementById("chat-box");
+        const chatBox = document.getElementById("chat-box");
 
         chatBox.innerHTML = "";
 
         data.forEach(chat => {
 
+            // User Message
             chatBox.innerHTML += `
                 <div class="user">
                     ${chat.user_message}
                 </div>
             `;
 
+            // Image (if exists)
             if (chat.image) {
                 chatBox.innerHTML += `
                     <img src="${chat.image}" width="200">
                 `;
             }
 
+            // Bot Response
             chatBox.innerHTML += `
                 <div class="bot">
                     ${chat.bot_response}
@@ -49,7 +67,10 @@ async function loadHistory() {
             `;
         });
 
-        chatBox.scrollTop = chatBox.scrollHeight;
+        // Wait for DOM render then scroll
+        setTimeout(() => {
+            scrollToBottom();
+        }, 100);
 
     } catch (error) {
 
@@ -60,22 +81,22 @@ async function loadHistory() {
     }
 }
 
-
 // ==========================
 // 💬 SEND MESSAGE
 // ==========================
 async function sendMessage() {
 
-    let message = document.getElementById("message").value;
-    let image = document.getElementById("imageInput").files[0];
+    const message = document.getElementById("message").value;
+    const image = document.getElementById("imageInput").files[0];
 
-    // 🚨 Validation
+    // Validation
     if (!message.trim()) {
         alert("Please enter a message");
         return;
     }
 
-    let formData = new FormData();
+    const formData = new FormData();
+
     formData.append("message", message);
 
     if (image) {
@@ -89,7 +110,6 @@ async function sendMessage() {
             body: formData
         });
 
-        // 🚨 If backend error
         if (!response.ok) {
             console.error("Server Error:", response.status);
             alert("Server error occurred");
@@ -98,65 +118,69 @@ async function sendMessage() {
 
         const data = await response.json();
 
+        // Speak bot response
         speak(data.bot_response);
 
+        const chatBox = document.getElementById("chat-box");
 
-        let chatBox = document.getElementById("chat-box");
-
-        // 👤 User message
+        // User Message
         chatBox.innerHTML += `
             <div class="user">
                 ${data.user_message}
             </div>
         `;
 
-        // 🖼️ Image
+        // Image
         if (data.image) {
             chatBox.innerHTML += `
                 <img src="${data.image}" width="200">
             `;
         }
 
-        // 🤖 Bot response
+        // Bot Response
         chatBox.innerHTML += `
             <div class="bot">
                 ${data.bot_response}
             </div>
         `;
 
-        // reset input
+        // Clear inputs
         document.getElementById("message").value = "";
         document.getElementById("imageInput").value = "";
 
-        chatBox.scrollTop = chatBox.scrollHeight;
+        // Auto Scroll
+        scrollToBottom();
 
     } catch (error) {
 
         console.error("Send Message Error:", error);
         alert("Failed to send message");
     }
-    
 }
 
+// ==========================
+// 🎤 VOICE INPUT
+// ==========================
 document
-.getElementById("mic-btn")
-.addEventListener("click", () => {
+    .getElementById("mic-btn")
+    .addEventListener("click", () => {
 
-    recognition.start();
+        recognition.start();
 
-});
+    });
 
-recognition.onresult = function(event){
+recognition.onresult = function (event) {
 
     const text =
         event.results[0][0].transcript;
 
-    document.getElementById(
-        "message"
-    ).value = text;
-
+    document.getElementById("message").value = text;
 };
-function speak(text){
+
+// ==========================
+// 🔊 TEXT TO SPEECH
+// ==========================
+function speak(text) {
 
     const utterance =
         new SpeechSynthesisUtterance(text);
@@ -165,12 +189,14 @@ function speak(text){
 
     speechSynthesis.speak(utterance);
 }
+
 // ==========================
 // 🚀 INIT
 // ==========================
-window.addEventListener("load", function () {
+window.addEventListener("load", () => {
 
     console.log("Window Loaded");
 
     loadHistory();
+
 });

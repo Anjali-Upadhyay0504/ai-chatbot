@@ -27,9 +27,17 @@ body{
 h2{
     text-align:center;
     margin-bottom:20px;
+    
     color:#333;
    
 }
+/* .chat-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px; /* icon aur text ke beech space */
+*/
+
 
 #chat-box{
     height:500px;
@@ -43,6 +51,10 @@ h2{
 #chat-box{
     display:flex;
     flex-direction:column;
+}
+#chat-box {
+    height: 500px;
+    overflow-y: auto;
 }
 .user{
     background:#007bff;
