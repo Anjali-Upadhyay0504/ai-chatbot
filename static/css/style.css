@@ -103,6 +103,8 @@ img{
     height:auto;
     border-radius:10px;
     margin-top:10px;
+    display: block;
+    margin-left: auto;
 }
 
 /* Tablet */

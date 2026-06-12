@@ -1,17 +1,40 @@
 console.log("app.js loaded");
 
-const SpeechRecognition =
-    window.SpeechRecognition ||
-    window.webkitSpeechRecognition;
+// ==========================
+// 🎤 VOICE SETUP
+// ==========================
+let recognition = null;
 
-const recognition = new SpeechRecognition();
+function initVoice() {
 
-recognition.lang = "en-US";
+    const SpeechRecognition =
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+        console.log("Voice not supported");
+        return;
+    }
+
+    recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+
+    recognition.onresult = function (event) {
+
+        const text = event.results[0][0].transcript;
+        document.getElementById("message").value = text;
+    };
+
+    recognition.onerror = function (event) {
+        console.log("Voice Error:", event.error);
+    };
+}
 
 // ==========================
-// 📜 SCROLL TO BOTTOM
+// 📜 SCROLL
 // ==========================
 function scrollToBottom() {
+
     const chatBox = document.getElementById("chat-box");
 
     if (!chatBox) return;
@@ -23,54 +46,61 @@ function scrollToBottom() {
 }
 
 // ==========================
-// 📜 LOAD CHAT HISTORY
+// 📜 LOAD HISTORY
 // ==========================
 async function loadHistory() {
 
-    console.log("Loading history...");
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+        console.log("No JWT token found");
+
+        document.getElementById("chat-box").innerHTML =
+            "<h3>Please Login First</h3>";
+
+        return;
+    }
 
     try {
 
-        const response = await fetch("/api/history/");
+        const response = await fetch("/api/history/", {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
 
-        console.log("Response Status:", response.status);
+        if (!response.ok) {
+
+            console.log("History Status:", response.status);
+            const err = await response.text();
+            console.log("History Error:", err);
+
+            throw new Error("History Failed");
+        }
 
         const data = await response.json();
 
-        console.log("History Data:", data);
-
         const chatBox = document.getElementById("chat-box");
-
         chatBox.innerHTML = "";
 
         data.forEach(chat => {
 
-            // User Message
             chatBox.innerHTML += `
-                <div class="user">
-                    ${chat.user_message}
-                </div>
+                <div class="user">${chat.user_message}</div>
             `;
 
-            // Image (if exists)
             if (chat.image) {
                 chatBox.innerHTML += `
                     <img src="${chat.image}" width="200">
                 `;
             }
 
-            // Bot Response
             chatBox.innerHTML += `
-                <div class="bot">
-                    ${chat.bot_response}
-                </div>
+                <div class="bot">${chat.bot_response}</div>
             `;
         });
 
-        // Wait for DOM render then scroll
-        setTimeout(() => {
-            scrollToBottom();
-        }, 100);
+        scrollToBottom();
 
     } catch (error) {
 
@@ -86,17 +116,22 @@ async function loadHistory() {
 // ==========================
 async function sendMessage() {
 
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+        alert("Please Login First");
+        return;
+    }
+
     const message = document.getElementById("message").value;
     const image = document.getElementById("imageInput").files[0];
 
-    // Validation
     if (!message.trim()) {
         alert("Please enter a message");
         return;
     }
 
     const formData = new FormData();
-
     formData.append("message", message);
 
     if (image) {
@@ -107,48 +142,45 @@ async function sendMessage() {
 
         const response = await fetch("/api/chat/", {
             method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`
+            },
             body: formData
         });
 
         if (!response.ok) {
-            console.error("Server Error:", response.status);
-            alert("Server error occurred");
-            return;
+
+            console.log("Chat Status:", response.status);
+
+            const errorText = await response.text();
+            console.log("Chat Error:", errorText);
+
+            throw new Error("Chat Failed");
         }
 
         const data = await response.json();
 
-        // Speak bot response
         speak(data.bot_response);
 
         const chatBox = document.getElementById("chat-box");
 
-        // User Message
         chatBox.innerHTML += `
-            <div class="user">
-                ${data.user_message}
-            </div>
+            <div class="user">${data.user_message}</div>
         `;
 
-        // Image
         if (data.image) {
             chatBox.innerHTML += `
                 <img src="${data.image}" width="200">
             `;
         }
 
-        // Bot Response
         chatBox.innerHTML += `
-            <div class="bot">
-                ${data.bot_response}
-            </div>
+            <div class="bot">${data.bot_response}</div>
         `;
 
-        // Clear inputs
         document.getElementById("message").value = "";
         document.getElementById("imageInput").value = "";
 
-        // Auto Scroll
         scrollToBottom();
 
     } catch (error) {
@@ -159,32 +191,13 @@ async function sendMessage() {
 }
 
 // ==========================
-// 🎤 VOICE INPUT
-// ==========================
-document
-    .getElementById("mic-btn")
-    .addEventListener("click", () => {
-
-        recognition.start();
-
-    });
-
-recognition.onresult = function (event) {
-
-    const text =
-        event.results[0][0].transcript;
-
-    document.getElementById("message").value = text;
-};
-
-// ==========================
-// 🔊 TEXT TO SPEECH
+// 🔊 SPEAK
 // ==========================
 function speak(text) {
 
-    const utterance =
-        new SpeechSynthesisUtterance(text);
+    if (!text) return;
 
+    const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
 
     speechSynthesis.speak(utterance);
@@ -195,8 +208,18 @@ function speak(text) {
 // ==========================
 window.addEventListener("load", () => {
 
-    console.log("Window Loaded");
-
     loadHistory();
+    initVoice();
 
+    const micBtn = document.getElementById("mic-btn");
+
+    if (micBtn) {
+
+        micBtn.addEventListener("click", () => {
+
+            if (recognition) {
+                recognition.start();
+            }
+        });
+    }
 });

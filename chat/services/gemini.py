@@ -1,27 +1,47 @@
-import requests
+import google.generativeai as genai
 from django.conf import settings
+from PIL import Image
 
+# Configure Gemini
+genai.configure(
+    api_key=settings.GEMINI_API_KEY
+)
+
+# Load Model
+model = genai.GenerativeModel(
+    "gemini-2.5-flash"
+)
+
+
+# ==========================
+# TEXT CHAT
+# ==========================
 def gemini_call(prompt):
 
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+    response = model.generate_content(
+        prompt
+    )
 
-    headers = {
-        "Content-Type": "application/json",
-        "x-goog-api-key": settings.GEMINI_API_KEY
-    }
+    return response.text
 
-    data = {
-        "contents": [{
-            "parts": [{"text": prompt}]
-        }]
-    }
 
-    response = requests.post(url, json=data, headers=headers)
+# ==========================
+# IMAGE + TEXT CHAT
+# ==========================
+def gemini_vision_call(
+    prompt,
+    image_file
+):
 
-    # 🔥 IMPORTANT: status check
-    if response.status_code != 200:
-        raise Exception(f"Gemini Error: {response.text}")
+    image = Image.open(
+        image_file
+    )
 
-    result = response.json()
+    response = model.generate_content(
+        [
+            prompt,
+            image
+        ]
+    )
 
-    return result["candidates"][0]["content"]["parts"][0]["text"]
+    return response.text

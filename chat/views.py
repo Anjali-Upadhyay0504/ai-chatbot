@@ -1,19 +1,54 @@
-from django.conf import settings
+from django.contrib.auth.models import User
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import (
+    IsAuthenticated,
+    AllowAny
+)
 
 from .models import ChatMessage
 from .serializers import ChatSerializer
 
-from .services.router import get_ai_response
-import PIL.Image
-from rest_framework.permissions import AllowAny
+from .services.router import (
+    get_ai_response,
+    get_ai_vision_response
+)
 
+
+class RegisterAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+
+        username = request.data.get("username")
+        password = request.data.get("password")
+
+        if not username or not password:
+            return Response(
+                {"error": "Username and password are required"},
+                status=400
+            )
+
+        if User.objects.filter(username=username).exists():
+            return Response(
+                {"error": "Username already exists"},
+                status=400
+            )
+
+        User.objects.create_user(
+            username=username,
+            password=password
+        )
+
+        return Response({
+            "message": "User created successfully"
+        })
 
 
 class ChatAPIView(APIView):
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
 
         message = request.data.get("message")
@@ -27,8 +62,10 @@ class ChatAPIView(APIView):
 
         try:
 
-            # 🧠 Last 5 chat memory (lightweight)
-            history = ChatMessage.objects.order_by("-created_at")[:5]
+            # Last 5 chats of current user only
+            history = ChatMessage.objects.filter(
+                user=request.user
+            ).order_by("-created_at")[:5]
 
             context = ""
 
@@ -40,14 +77,25 @@ class ChatAPIView(APIView):
 
             context += f"User: {message}\nBot:"
 
-            # 🧠 MULTI-LLM ROUTER CALL (Gemini + Groq + OpenRouter)
-            bot_reply = get_ai_response(context)
+            if image:
+
+                bot_reply = get_ai_vision_response(
+                    message,
+                    image
+                )
+
+            else:
+
+                bot_reply = get_ai_response(
+                    context
+                )
 
         except Exception as e:
             bot_reply = f"Error: {str(e)}"
 
-        # 💾 Save chat
+        # Save chat with logged-in user
         chat = ChatMessage.objects.create(
+            user=request.user,
             user_message=message,
             bot_response=bot_reply,
             image=image if image else None
@@ -59,14 +107,17 @@ class ChatAPIView(APIView):
 
 
 class ChatHistoryAPIView(APIView):
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
 
-        chats = ChatMessage.objects.order_by("created_at")
+        chats = ChatMessage.objects.filter(
+            user=request.user
+        ).order_by("created_at")
 
-        serializer = ChatSerializer(chats, many=True)
+        serializer = ChatSerializer(
+            chats,
+            many=True
+        )
 
         return Response(serializer.data)
-    # print("TRY GEMINI")
-    # print("TRY GROQ")
-    # print("TRY OPENROUTER")

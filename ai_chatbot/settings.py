@@ -35,7 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+    'channels',
     # Third-party apps
     'corsheaders',
     'rest_framework',
@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'chat',
 ]
 
-
+ASGI_APPLICATION = "ai_chatbot.asgi.application"
 # =========================
 # MIDDLEWARE
 # =========================
@@ -157,10 +157,12 @@ CORS_ALLOW_ALL_ORIGINS = True  # for development only
 # =========================
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [],
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",
-    ]
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+    ),
 }
 
 
