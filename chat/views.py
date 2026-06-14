@@ -45,24 +45,26 @@ class RegisterAPIView(APIView):
             "message": "User created successfully"
         })
 
-
 class ChatAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
 
-        message = request.data.get("message")
+        message = request.data.get("message", "")
         image = request.FILES.get("image")
 
-        if not message:
+        print("FILES:", request.FILES)
+        print("IMAGE:", image)
+
+        # Message ya image me se kam se kam ek hona chahiye
+        if not message and not image:
             return Response(
-                {"error": "Message is required"},
+                {"error": "Message or image is required"},
                 status=400
             )
 
         try:
 
-            # Last 5 chats of current user only
             history = ChatMessage.objects.filter(
                 user=request.user
             ).order_by("-created_at")[:5]
@@ -75,37 +77,32 @@ class ChatAPIView(APIView):
                     f"Bot: {chat.bot_response}\n"
                 )
 
-            context += f"User: {message}\nBot:"
+            if message:
+                context += f"User: {message}\nBot:"
 
+            # Image hai to Vision AI
             if image:
-
                 bot_reply = get_ai_vision_response(
-                    message,
+                    message if message else "Describe this image",
                     image
                 )
-
             else:
-
-                bot_reply = get_ai_response(
-                    context
-                )
+                bot_reply = get_ai_response(context)
 
         except Exception as e:
             bot_reply = f"Error: {str(e)}"
 
-        # Save chat with logged-in user
         chat = ChatMessage.objects.create(
             user=request.user,
             user_message=message,
             bot_response=bot_reply,
-            image=image if image else None
+            image=image
         )
 
         serializer = ChatSerializer(chat)
 
         return Response(serializer.data)
-
-
+    
 class ChatHistoryAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -119,5 +116,5 @@ class ChatHistoryAPIView(APIView):
             chats,
             many=True
         )
-
+        
         return Response(serializer.data)

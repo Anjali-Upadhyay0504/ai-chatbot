@@ -1,0 +1,96 @@
+/* =========================
+   RESET
+========================= */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+/* =========================
+   BACKGROUND (SIGNUP MATCH)
+========================= */
+
+body {
+    height: 100vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: red;
+    /* background: linear-gradient(135deg, #e0f7ff, #f7e9ff, #e8ffe8); */
+}
+
+/* =========================
+   LOGIN CARD
+========================= */
+.login-container {
+    width: 320px;
+    padding: 30px;
+
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+
+    text-align: center;
+
+    backdrop-filter: blur(8px);
+}
+
+/* =========================
+   TITLE
+========================= */
+.login-container h2 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* =========================
+   INPUT FIELDS
+========================= */
+.login-container input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+
+    border: 1px solid #ddd;
+    border-radius: 8px;
+
+    outline: none;
+    font-size: 14px;
+
+    transition: 0.3s;
+}
+
+/* focus effect */
+.login-container input:focus {
+    border-color: #6c63ff;
+    box-shadow: 0 0 5px rgba(108, 99, 255, 0.3);
+}
+
+/* =========================
+   BUTTON
+========================= */
+.login-container button {
+    width: 100%;
+    padding: 12px;
+
+    margin-top: 10px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #6c63ff;
+    color: white;
+    font-size: 15px;
+
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+/* hover */
+.login-container button:hover {
+    background: #5548e6;
+}
