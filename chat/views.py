@@ -6,7 +6,7 @@ from rest_framework.permissions import (
     IsAuthenticated,
     AllowAny
 )
-
+from chat.services.vector_store import search_pdf
 from .models import ChatMessage
 from .serializers import ChatSerializer
 
@@ -14,7 +14,12 @@ from .services.router import (
     get_ai_response,
     get_ai_vision_response
 )
-
+from .models import PDFDocument
+from .services.pdf_processors import (
+    extract_pdf_text,
+    split_text
+)
+from .services.vector_store import create_vector_store
 
 class RegisterAPIView(APIView):
     permission_classes = [AllowAny]
@@ -78,7 +83,24 @@ class ChatAPIView(APIView):
                 )
 
             if message:
-                context += f"User: {message}\nBot:"
+
+                pdf_docs = search_pdf(message) if message else []
+
+                pdf_context = ""
+                for doc in pdf_docs:
+                    pdf_context += doc.page_content + "\n\n"
+
+                context = f"""
+                PDF CONTEXT:
+                {pdf_context}
+
+                CHAT HISTORY:
+                {context}
+
+                USER QUESTION:
+                {message}
+                ANSWER:
+                """
 
             # Image hai to Vision AI
             if image:
@@ -118,3 +140,56 @@ class ChatHistoryAPIView(APIView):
         )
         
         return Response(serializer.data)
+class PDFUploadAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+
+        pdf = request.FILES.get("pdf")
+
+        if not pdf:
+            return Response(
+                {"error": "PDF file required"},
+                status=400
+            )
+
+        document = PDFDocument.objects.create(
+            user=request.user,
+            file=pdf
+        )
+
+        pdf_path = document.file.path
+
+        # STEP 1: Extract text
+        text = extract_pdf_text(pdf_path)
+
+        print("FILES RECEIVED:", request.FILES)
+        print("POST DATA:", request.POST)
+        print("TEXT LENGTH:", len(text))
+        print("TEXT SAMPLE:", text[:300])
+
+        if not text.strip():
+            return Response(
+                {"error": "PDF has no readable text (maybe scanned PDF)"},
+                status=400
+            )
+
+        # STEP 2: Split into chunks
+        chunks = split_text(text)
+
+        print("CHUNKS:", len(chunks))
+
+        if not chunks:
+            return Response(
+                {"error": "No chunks generated from PDF"},
+                status=400
+            )
+
+        # STEP 3: Create vector store
+        create_vector_store(chunks)
+
+        return Response({
+            "message": "PDF uploaded successfully"
+        })
+
+

@@ -29,3 +29,11 @@ class ChatMessage(models.Model):
 
     def __str__(self):
         return f"{self.user.username}: {self.user_message[:30]}"
+    
+
+ 
+
+class PDFDocument(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    file = models.FileField(upload_to="pdfs/")
+    uploaded_at = models.DateTimeField(auto_now_add=True)

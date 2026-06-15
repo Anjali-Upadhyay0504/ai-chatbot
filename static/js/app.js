@@ -14,12 +14,27 @@ window.addEventListener("load", () => {
 
     loadHistory();
     initVoice();
+
+    const messageInput = document.getElementById("message");
+
+    messageInput.addEventListener("keydown", function (e) {
+
+        if (e.key === "Enter") {
+
+            e.preventDefault();
+
+            sendMessage();
+        }
+    });
 });
 
 // ==========================
 // 🎤 VOICE SETUP
 // ==========================
-let recognition = null;
+
+
+let recognition;
+let isListening = false;
 
 function initVoice() {
 
@@ -28,31 +43,63 @@ function initVoice() {
         window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-        console.log("Voice not supported");
+        alert("Speech Recognition is not supported in this browser.");
         return;
     }
 
     recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
 
-    recognition.onresult = function (event) {
-        const text = event.results[0][0].transcript;
-        document.getElementById("message").value = text;
-    };
-
-    recognition.onerror = function (event) {
-        console.log("Voice Error:", event.error);
-    };
+    recognition.lang = "en-IN";      // Hindi ke liye "hi-IN"
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
 
     const micBtn = document.getElementById("mic-btn");
 
-    if (micBtn) {
-        micBtn.addEventListener("click", () => {
-            recognition.start();
-        });
-    }
-}
+recognition.onstart = function () {
 
+    isListening = true;
+
+    console.log("🎤 Listening...");
+
+    micBtn.innerHTML = "🎙️";
+};
+
+recognition.onresult = function (event) {
+
+    const text = event.results[0][0].transcript;
+
+    console.log("Recognized:", text);
+
+    document.getElementById("message").value = text;
+
+    // sendMessage();
+};
+
+recognition.onerror = function (event) {
+
+    console.log("Voice Error:", event.error);
+};
+
+recognition.onend = function () {
+
+    isListening = false;
+
+    micBtn.innerHTML = `<i class="fa-solid fa-microphone-lines"></i>`;
+
+    console.log("Recognition stopped");
+};
+
+micBtn.addEventListener("click", function () {
+
+    if (isListening) return;
+
+    speechSynthesis.cancel();
+
+    recognition.start();
+});
+
+}
 // ==========================
 // 📜 SCROLL TO BOTTOM
 // ==========================
@@ -143,7 +190,7 @@ async function sendMessage() {
     if (image) {
         formData.append("image", image);
     }
-
+    
     try {
 
         const response = await fetch("/api/chat/", {
@@ -180,6 +227,16 @@ async function sendMessage() {
         chatBox.innerHTML += `
             <div class="bot">${data.bot_response}</div>
         `;
+        const pdfUrl = data.pdf || data.file_url || data.file;
+        if (pdfUrl) {
+            chatBox.innerHTML += `
+                <div class="pdf-message">
+                    📄 <a href="${pdfUrl}" target="_blank">
+                        Open PDF
+                    </a>
+                </div>
+            `;
+        }
 
         // reset inputs
         document.getElementById("message").value = "";
@@ -203,8 +260,49 @@ function speak(text) {
 
     if (!text) return;
 
+    speechSynthesis.cancel();
+
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
+
+    utterance.lang = "en-US";     // Hindi: hi-IN
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    utterance.volume = 1;
 
     speechSynthesis.speak(utterance);
+
+}
+
+
+
+// ==========================
+// 📄 PDF UPLOAD
+// ==========================
+async function uploadPDF() {
+
+    const token = localStorage.getItem("access_token");
+    const input = document.getElementById("pdfInput");
+    const pdf = input.files[0];
+
+    console.log("FILE:", pdf);
+
+    const formData = new FormData();
+    formData.append("pdf", pdf, pdf.name);
+
+    for (let pair of formData.entries()) {
+        console.log("FORMDATA:", pair[0], pair[1]);
+    }
+
+    const response = await fetch("/api/upload-pdf/", {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`
+        },
+        body: formData
+    });
+
+    const data = await response.json();
+    console.log("SERVER:", data);
+
+    alert(data.message || data.error);
 }

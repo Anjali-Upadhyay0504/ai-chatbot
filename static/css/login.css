@@ -18,8 +18,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: red;
-    /* background: linear-gradient(135deg, #e0f7ff, #f7e9ff, #e8ffe8); */
+    background: linear-gradient(135deg, #e0f7ff, #f7e9ff, #e8ffe8);
 }
 
 /* =========================

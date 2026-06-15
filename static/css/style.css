@@ -106,7 +106,19 @@ img{
     display: block;
     margin-left: auto;
 }
+.pdf-message {
+    background: #f5f5f5;
+    padding: 10px;
+    border-radius: 8px;
+    margin: 5px 0;
+    width: fit-content;
+}
 
+.pdf-message a {
+    text-decoration: none;
+    color: #d32f2f;
+    font-weight: bold;
+}
 /* Tablet */
 @media screen and (max-width:768px){
 

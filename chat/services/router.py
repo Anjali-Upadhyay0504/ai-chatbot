@@ -2,7 +2,7 @@ from .gemini import (
     gemini_call,
     gemini_vision_call
 )
-
+from .vector_store import get_pdf_context
 from .groq import groq_call
 from .openrouter import openrouter_call
 
@@ -84,3 +84,32 @@ def get_ai_vision_response(
         return f"Vision Error: {str(e)}"
 
     return "⚠️ Unable to analyze image."
+
+def get_pdf_response(question):
+
+    try:
+
+        context = get_pdf_context(question)
+
+        prompt = f"""
+You are a PDF assistant.
+
+Answer ONLY from the provided PDF context.
+
+If the answer is not present in the PDF context,
+reply:
+
+"I could not find this information in the uploaded PDF."
+
+PDF Context:
+{context}
+
+Question:
+{question}
+"""
+
+        return get_ai_response(prompt)
+
+    except Exception as e:
+
+        return f"PDF Error: {str(e)}"
