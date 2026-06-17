@@ -8,27 +8,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2">
-
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
 <body>
 
+<div class="chat-wrapper">
 
-    <div class="chat-wrapper">
+    <!-- ================= HEADER ================= -->
+    <header class="chat-header">
+        <i class="fa-solid fa-robot"></i>
+        <h2>AI Chatbot</h2>
+    </header>
 
-        <!-- HEADER -->
-        <header class="chat-header">
-            <i class="fa-solid fa-robot"></i>
-            <h2>AI Chatbot</h2>
-        </header>
+    <!-- ================= CHAT BOX ================= -->
+    <main id="chat-box" class="chat-box"></main>
 
-        <!-- CHAT AREA -->
-        <main id="chat-box" class="chat-box"></main>
+    <!-- ================= INPUT AREA ================= -->
+    <section class="chat-input-area">
 
-        <!-- INPUT AREA -->
-        <section class="chat-input-area">
+        <!-- LEFT ACTIONS -->
+        <div class="input-actions">
 
             <!-- IMAGE UPLOAD -->
             <label class="icon-btn">
@@ -36,30 +36,43 @@
                 <input type="file" id="imageInput" hidden>
             </label>
 
-            <!-- TEXT INPUT -->
-            <input
-                type="text"
-                id="message"
-                placeholder="Type your message..."
-                autocomplete="off"
-            >
+            <!-- PDF UPLOAD -->
+           <label class="icon-btn">
+                <i class="fa-solid fa-file-pdf"></i>
+                <input type="file" id="pdfInput" hidden onchange="uploadPDF()">
+            </label>
 
-            <!-- VOICE BUTTON (PROFESSIONAL ICON) -->
+
+        </div>
+
+        <!-- TEXT INPUT -->
+        <input
+            type="text"
+            id="message"
+            placeholder="Type your message..."
+            autocomplete="off"
+        >
+
+        <!-- RIGHT ACTIONS -->
+        <div class="input-actions">
+
+            <!-- VOICE -->
             <button id="mic-btn" class="icon-btn voice-btn">
                 <i class="fa-solid fa-microphone-lines" style="color:white;"></i>
             </button>
-           <input type="file" id="pdfInput">
 
-           <button onclick="uploadPDF()">Upload PDF</button>
-            <!-- SEND BUTTON -->
+            <!-- SEND -->
             <button onclick="sendMessage()" class="send-btn">
                 <i class="fa-solid fa-paper-plane" style="color:white;"></i>
             </button>
-        </section>
 
-    </div>
+        </div>
 
-    <script src="{% static 'js/app.js' %}"></script>
+    </section>
+
+</div>
+
+<script src="{% static 'js/app.js' %}"></script>
 
 </body>
 </html>

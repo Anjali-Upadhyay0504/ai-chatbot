@@ -23,6 +23,11 @@ class ChatMessage(models.Model):
         null=True
     )
 
+    pdf = models.FileField(
+    upload_to="chat_pdfs/",
+    blank=True,
+    null=True
+)
     created_at = models.DateTimeField(
         auto_now_add=True
     )

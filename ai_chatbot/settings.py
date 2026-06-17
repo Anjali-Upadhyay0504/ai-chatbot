@@ -146,7 +146,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 
 # =========================
-# CORS (IMPORTANT)
+# CORS (IMPORTANT) 
 # =========================
 
 CORS_ALLOW_ALL_ORIGINS = True  # for development only
@@ -164,7 +164,9 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ),
 }
-
+SIMPLE_JWT = {
+    "AUTH_HEADER_TYPES": ("Bearer",),   # must be "Bearer"
+}
 
 # =========================
 # API KEYS (from .env)

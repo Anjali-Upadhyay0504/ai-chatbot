@@ -1,55 +1,50 @@
 from django.contrib.auth.models import User
+from django.conf import settings
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import (
-    IsAuthenticated,
-    AllowAny
-)
-from chat.services.vector_store import search_pdf
-from .models import ChatMessage
+from rest_framework.permissions import IsAuthenticated, AllowAny
+
+from .models import ChatMessage, PDFDocument
 from .serializers import ChatSerializer
 
 from .services.router import (
     get_ai_response,
     get_ai_vision_response
 )
-from .models import PDFDocument
+
 from .services.pdf_processors import (
     extract_pdf_text,
     split_text
 )
-from .services.vector_store import create_vector_store
 
+from .services.vector_store import create_vector_store, search_pdf
+
+
+# ==========================
+# REGISTER
+# ==========================
 class RegisterAPIView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-
         username = request.data.get("username")
         password = request.data.get("password")
 
         if not username or not password:
-            return Response(
-                {"error": "Username and password are required"},
-                status=400
-            )
+            return Response({"error": "Username and password required"}, status=400)
 
         if User.objects.filter(username=username).exists():
-            return Response(
-                {"error": "Username already exists"},
-                status=400
-            )
+            return Response({"error": "Username already exists"}, status=400)
 
-        User.objects.create_user(
-            username=username,
-            password=password
-        )
+        User.objects.create_user(username=username, password=password)
 
-        return Response({
-            "message": "User created successfully"
-        })
+        return Response({"message": "User created successfully"})
 
+
+# ==========================
+# CHAT API
+# ==========================
 class ChatAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -58,58 +53,48 @@ class ChatAPIView(APIView):
         message = request.data.get("message", "")
         image = request.FILES.get("image")
 
-        print("FILES:", request.FILES)
-        print("IMAGE:", image)
-
-        # Message ya image me se kam se kam ek hona chahiye
         if not message and not image:
-            return Response(
-                {"error": "Message or image is required"},
-                status=400
-            )
+            return Response({"error": "Message or image required"}, status=400)
 
         try:
-
+            # last chat history
             history = ChatMessage.objects.filter(
                 user=request.user
             ).order_by("-created_at")[:5]
 
             context = ""
-
             for chat in reversed(history):
-                context += (
-                    f"User: {chat.user_message}\n"
-                    f"Bot: {chat.bot_response}\n"
-                )
+                context += f"User: {chat.user_message}\nBot: {chat.bot_response}\n"
+
+            pdf_context = ""
 
             if message:
+                pdf_docs = search_pdf(message,request.user.id)
 
-                pdf_docs = search_pdf(message) if message else []
+                if pdf_docs:
+                    for doc in pdf_docs:
+                        pdf_context += doc.page_content + "\n\n"
 
-                pdf_context = ""
-                for doc in pdf_docs:
-                    pdf_context += doc.page_content + "\n\n"
+            final_prompt = f"""
+PDF CONTEXT:
+{pdf_context}
 
-                context = f"""
-                PDF CONTEXT:
-                {pdf_context}
+CHAT HISTORY:
+{context}
 
-                CHAT HISTORY:
-                {context}
+USER QUESTION:
+{message}
 
-                USER QUESTION:
-                {message}
-                ANSWER:
-                """
+ANSWER:
+"""
 
-            # Image hai to Vision AI
             if image:
                 bot_reply = get_ai_vision_response(
                     message if message else "Describe this image",
                     image
                 )
             else:
-                bot_reply = get_ai_response(context)
+                bot_reply = get_ai_response(final_prompt)
 
         except Exception as e:
             bot_reply = f"Error: {str(e)}"
@@ -120,26 +105,32 @@ class ChatAPIView(APIView):
             bot_response=bot_reply,
             image=image
         )
+        
 
         serializer = ChatSerializer(chat)
 
         return Response(serializer.data)
-    
+
+
+# ==========================
+# CHAT HISTORY
+# ==========================
 class ChatHistoryAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-
         chats = ChatMessage.objects.filter(
             user=request.user
         ).order_by("created_at")
 
-        serializer = ChatSerializer(
-            chats,
-            many=True
-        )
-        
+        serializer = ChatSerializer(chats, many=True)
+
         return Response(serializer.data)
+
+
+# ==========================
+# PDF UPLOAD API (FIXED)
+# ==========================
 class PDFUploadAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -148,48 +139,49 @@ class PDFUploadAPIView(APIView):
         pdf = request.FILES.get("pdf")
 
         if not pdf:
-            return Response(
-                {"error": "PDF file required"},
-                status=400
-            )
+            return Response({"error": "PDF file required"}, status=400)
 
         document = PDFDocument.objects.create(
             user=request.user,
             file=pdf
         )
+     
+
+
+        ChatMessage.objects.create(
+            user=request.user,
+            user_message="",
+            bot_response="PDF uploaded successfully",
+            pdf=document.file
+        )
 
         pdf_path = document.file.path
+        print("PDF PATH:", pdf_path)
+        try:
+            text = extract_pdf_text(pdf_path)
 
-        # STEP 1: Extract text
-        text = extract_pdf_text(pdf_path)
-
-        print("FILES RECEIVED:", request.FILES)
-        print("POST DATA:", request.POST)
-        print("TEXT LENGTH:", len(text))
-        print("TEXT SAMPLE:", text[:300])
+        except Exception as e:
+            return Response(
+                {"error": f"Invalid PDF: {str(e)}"},
+                status=400
+            )
 
         if not text.strip():
-            return Response(
-                {"error": "PDF has no readable text (maybe scanned PDF)"},
-                status=400
-            )
+            return Response({"error": "No readable text in PDF"}, status=400)
 
-        # STEP 2: Split into chunks
         chunks = split_text(text)
 
-        print("CHUNKS:", len(chunks))
-
         if not chunks:
-            return Response(
-                {"error": "No chunks generated from PDF"},
-                status=400
-            )
+            return Response({"error": "No chunks generated"}, status=400)
 
-        # STEP 3: Create vector store
-        create_vector_store(chunks)
+        print("TEXT LENGTH:", len(text))
+        print("CHUNKS:", len(chunks))
+        create_vector_store(chunks,user_id=request.user.id)
+
+        # 🔥 IMPORTANT FIX: send file URL to frontend
+        file_url = request.build_absolute_uri(document.file.url)
 
         return Response({
-            "message": "PDF uploaded successfully"
+            "message": "PDF uploaded successfully",
+            "pdf": file_url
         })
-
-
