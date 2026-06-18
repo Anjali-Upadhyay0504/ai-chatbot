@@ -38,31 +38,64 @@ function scrollToBottom() {
 
 // ==========================
 // 🎤 VOICE (FIXED - IMPORTANT)
-// ==========================
 function initVoice() {
+
     const SpeechRecognition =
-        window.SpeechRecognition || window.webkitSpeechRecognition;
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-        console.log("Speech not supported");
+        alert("Speech Recognition not supported");
         return;
     }
 
     const recognition = new SpeechRecognition();
-    recognition.lang = "en-IN";
 
     const micBtn = document.getElementById("mic-btn");
 
+    recognition.lang = "en-US";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    let isListening = false;
+
     micBtn.addEventListener("click", () => {
+
+        if (isListening) {
+            return;
+        }
+
         recognition.start();
     });
 
+    recognition.onstart = () => {
+        isListening = true;
+        console.log("🎤 Listening...");
+    };
     recognition.onresult = (event) => {
-        document.getElementById("message").value =
-            event.results[0][0].transcript;
+
+        const text = event.results[0][0].transcript;
+
+        console.log("Recognized:", text);
+
+        document.getElementById("message").value = text;
+    };
+
+    recognition.onerror = (event) => {
+
+        console.log(
+            "Voice Error:",
+            event.error
+        );
+    };
+
+    recognition.onend = () => {
+
+        isListening = false;
+
+        console.log("🛑 Stopped");
     };
 }
-
 
 // ==========================
 // 📜 HISTORY

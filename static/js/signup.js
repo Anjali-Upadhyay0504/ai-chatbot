@@ -18,6 +18,7 @@ async function signup() {
 
     const data = await res.json();
 
+
     if (res.ok) {
 
         alert("Signup successful ✅");

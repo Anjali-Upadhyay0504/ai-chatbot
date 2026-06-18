@@ -76,17 +76,17 @@ class ChatAPIView(APIView):
                         pdf_context += doc.page_content + "\n\n"
 
             final_prompt = f"""
-PDF CONTEXT:
-{pdf_context}
+                PDF CONTEXT:
+                {pdf_context}
 
-CHAT HISTORY:
-{context}
+                CHAT HISTORY:
+                {context}
 
-USER QUESTION:
-{message}
+                USER QUESTION:
+                {message}
 
-ANSWER:
-"""
+                ANSWER:
+                """
 
             if image:
                 bot_reply = get_ai_vision_response(
