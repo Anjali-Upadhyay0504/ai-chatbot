@@ -4,71 +4,135 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AI Chatbot</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot</title>
 
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=3">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
 <body>
 
 <div class="chat-wrapper">
 
-    <!-- ================= HEADER ================= -->
-    <header class="chat-header">
-        <i class="fa-solid fa-robot"></i>
-        <h2>AI Chatbot</h2>
-    </header>
+    <!-- ================= SIDEBAR ================= -->
+    <aside class="sidebar">
 
-    <!-- ================= CHAT BOX ================= -->
-    <main id="chat-box" class="chat-box"></main>
+        <button
+            class="new-chat-btn"
+            onclick="createSession()">
 
-    <!-- ================= INPUT AREA ================= -->
-    <section class="chat-input-area">
+            <i class="fa-solid fa-plus"></i>
+            New Chat
 
-        <!-- LEFT ACTIONS -->
-        <div class="input-actions">
+        </button>
 
-            <!-- IMAGE UPLOAD -->
-            <label class="icon-btn">
-                <i class="fa-solid fa-image"></i>
-                <input type="file" id="imageInput" hidden>
-            </label>
+        <div id="session-list" class="session-list">
 
-            <!-- PDF UPLOAD -->
-           <label class="icon-btn">
-                <i class="fa-solid fa-file-pdf"></i>
-                <input type="file" id="pdfInput" hidden onchange="uploadPDF()">
-            </label>
-
+            <!-- Sessions yahan load honge -->
 
         </div>
 
-        <!-- TEXT INPUT -->
-        <input
-            type="text"
-            id="message"
-            placeholder="Type your message..."
-            autocomplete="off"
-        >
+    </aside>
 
-        <!-- RIGHT ACTIONS -->
-        <div class="input-actions">
 
-            <!-- VOICE -->
-            <button id="mic-btn" class="icon-btn voice-btn">
-                <i class="fa-solid fa-microphone-lines" style="color:white;"></i>
-            </button>
+    <!-- ================= CHAT AREA ================= -->
+    <div class="chat-container">
 
-            <!-- SEND -->
-            <button onclick="sendMessage()" class="send-btn">
-                <i class="fa-solid fa-paper-plane" style="color:white;"></i>
-            </button>
+        <!-- HEADER -->
+        <header class="chat-header">
+            <i class="fa-solid fa-robot"></i>
+            <h2>AI Chatbot</h2>
+        </header>
 
-        </div>
 
-    </section>
+        <!-- CHAT BOX -->
+        <main
+            id="chat-box"
+            class="chat-box">
+
+        </main>
+
+
+        <!-- INPUT AREA -->
+        <section class="chat-input-area">
+
+            <!-- LEFT ACTIONS -->
+            <div class="input-actions">
+
+                <!-- IMAGE -->
+                <label class="icon-btn">
+
+                    <i class="fa-solid fa-image"></i>
+
+                    <input
+                        type="file"
+                        id="imageInput"
+                        hidden>
+
+                </label>
+
+
+                <!-- PDF -->
+                <label class="icon-btn">
+
+                    <i class="fa-solid fa-file-pdf"></i>
+
+                    <input
+                        type="file"
+                        id="pdfInput"
+                        hidden
+                        onchange="uploadPDF()">
+
+                </label>
+
+            </div>
+
+
+            <!-- MESSAGE INPUT -->
+            <input
+                type="text"
+                id="message"
+                placeholder="Type your message..."
+                autocomplete="off"
+            >
+
+
+            <!-- RIGHT ACTIONS -->
+            <div class="input-actions">
+
+                <!-- MIC -->
+                <button
+                    id="mic-btn"
+                    class="icon-btn voice-btn">
+
+                    <i
+                        class="fa-solid fa-microphone-lines"
+                        style="color:white;">
+                    </i>
+
+                </button>
+
+
+                <!-- SEND -->
+                <button
+                    onclick="sendMessage()"
+                    class="send-btn">
+
+                    <i
+                        class="fa-solid fa-paper-plane"
+                        style="color:white;">
+                    </i>
+
+                </button>
+
+            </div>
+
+        </section>
+
+    </div>
 
 </div>
 
