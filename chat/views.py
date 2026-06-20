@@ -139,6 +139,10 @@ ANSWER:
 
             bot_reply = f"Error: {str(e)}"
 
+        if session.title == "New Chat" and message:
+            session.title = message[:30]
+            session.save()
+
         chat = ChatMessage.objects.create(
             session=session,
             user=request.user,

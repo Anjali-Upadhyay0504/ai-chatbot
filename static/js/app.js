@@ -85,8 +85,8 @@ async function openSession(sessionId) {
             }
         }
     );
-
     const data = await res.json();
+   
 
     const chatBox =
         document.getElementById("chat-box");
@@ -100,6 +100,7 @@ async function openSession(sessionId) {
                 <div class="user">
                     ${chat.user_message}
                 </div>
+
             `;
         }
 
@@ -125,14 +126,26 @@ async function openSession(sessionId) {
                 </div>
             `;
         }
-
         if(chat.bot_response){
-            chatBox.innerHTML += `
-                <div class="bot">
-                    ${chat.bot_response}
-                </div>
-            `;
-        }
+    chatBox.innerHTML += `
+        <div class="bot-wrapper">
+
+            <div class="bot">
+                ${chat.bot_response}
+            </div>
+
+            <button class="copy-btn"
+                 onclick="copyText(this)">
+                <i class="fa-regular fa-copy"></i>
+             </button>
+
+
+        </div>
+    `;
+}
+
+          
+        
 
     });
 
@@ -329,14 +342,43 @@ async function sendMessage() {
     const data = await res.json();
 
     const chatBox = document.getElementById("chat-box");
+    
+    chatBox.innerHTML += `
+    <div class="user">
+        ${data.user_message || message}
+    </div>
+    `;
 
-    chatBox.innerHTML += `<div class="user">${data.user_message || message}</div>`;
+    if (data.image) {
+        chatBox.innerHTML += `
+        <img src="${data.image}" width="200">
+        `;
+    }
+
+    chatBox.innerHTML += `
+    <div class="bot-wrapper">
+
+        <div class="bot">
+            ${data.bot_response}
+        </div>
+
+        <button class="copy-btn"
+                onclick="copyText(this)">
+            <i class="fa-regular fa-copy"></i>
+        </button>
+
+    </div>
+    `;
+
+    scrollToBottom();
+       
 
     if (data.image) {
         chatBox.innerHTML += `<img src="${data.image}" width="200">`;
     }
 
-    chatBox.innerHTML += `<div class="bot">${data.bot_response}</div>`;
+    
+    
 
     document.getElementById("message").value = "";
     document.getElementById("imageInput").value = "";
@@ -403,4 +445,25 @@ function speak(text) {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
     speechSynthesis.speak(utterance);
+}
+
+// =====================
+//  copy 
+//  ================
+function copyText(button) {
+
+    const text =
+        button.previousElementSibling.innerText;
+
+    navigator.clipboard.writeText(text);
+
+    button.innerHTML =
+        '<i class="fa-solid fa-check"></i>';
+
+    setTimeout(() => {
+
+        button.innerHTML =
+            '<i class="fa-regular fa-copy"></i>';
+
+    }, 2000);
 }
